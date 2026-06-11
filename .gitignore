@@ -1,0 +1,33 @@
+# macOS / Python
+.DS_Store
+__pycache__/
+*.pyc
+
+# local runtime artifacts
+refresh.log
+launchd.out.log
+launchd.err.log
+new_jobs*.json
+entry.json
+discover.log
+
+# locally fetched job data (regenerate: bash scripts/run_ab.sh)
+results/
+
+# discovered maps (regenerate: python3 scripts/discover_ats.py)
+data/ats-map.json
+data/cowork-companies.json
+
+# personal resumes — copy resume/example.tex to backend-infra.tex / ai-mlops.tex
+resume/*
+!resume/example.tex
+!resume/README.md
+
+# personal screening results
+screenings/
+
+# personal notes / design docs
+docs/
+
+# local Claude settings (skills stay tracked)
+.claude/settings.local.json

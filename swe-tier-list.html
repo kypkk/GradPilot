@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Grad SWE 秋招公司分級表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --t1-head:#8c1d1d;  --t1-cell:#f9e3e3;  --t1-line:#e9c7c7;
+    --t15-head:#c0792b; --t15-cell:#fbf3d6; --t15-line:#efe2b6;
+    --t2-head:#203a5c;  --t2-cell:#e4eaf2;  --t2-line:#cdd8e6;
+    --t3-head:#525a23;  --t3-cell:#edefdb;  --t3-line:#d9dcc1;
+    --t4-head:#582b6c;  --t4-cell:#eae3f1;  --t4-line:#d7c9e3;
+    --ink:#222;
+    --red:#b21717;
+    --muted:#8a8a8a;
+    --paper:#faf8f4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:"Noto Sans TC",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    padding:28px 18px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  header.title{margin-bottom:18px;}
+  .title h1{
+    font-family:"Fraunces",serif;
+    font-weight:600;
+    font-size:clamp(22px,4vw,32px);
+    letter-spacing:-.01em;
+    line-height:1.15;
+  }
+  .title p{
+    margin-top:6px;
+    font-size:14px;
+    color:#5a5a5a;
+    max-width:680px;
+    line-height:1.5;
+  }
+  .legend{
+    display:flex;flex-wrap:wrap;gap:14px 22px;
+    margin:16px 0 22px;
+    padding:13px 16px;
+    background:#fff;
+    border:1px solid #e7e2d8;
+    border-radius:10px;
+    font-size:13px;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:#444;}
+  .swatch-red{color:var(--red);font-weight:700;}
+  .mk{font-weight:700;font-size:12px;font-family:"Fraunces",serif;}
+  .mk.up{color:#1f7a4d;}
+  .mk.down{color:#b25b17;}
+  .mk.new{color:#2563eb;}
+
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(178px,1fr));
+    gap:8px;
+    min-width:920px;
+  }
+  .col{display:flex;flex-direction:column;}
+  .col h2{
+    font-family:"Fraunces",serif;
+    font-weight:600;
+    font-size:16px;
+    color:#fff;
+    text-align:center;
+    padding:11px 8px;
+    border-radius:8px 8px 0 0;
+    letter-spacing:.02em;
+  }
+  .cell{
+    font-size:13.5px;
+    line-height:1.3;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line,#ddd);
+    display:flex;align-items:center;gap:6px;
+    min-height:34px;
+  }
+  .cell:last-child{border-bottom:none;border-radius:0 0 8px 8px;}
+  .cell .nm.red{color:var(--red);font-weight:700;}
+  .cell .mk{margin-left:auto;}
+
+  /* tier palettes */
+  .t1 h2{background:var(--t1-head);}   .t1 .cell{background:var(--t1-cell);--line:var(--t1-line);}
+  .t15 h2{background:var(--t15-head);} .t15 .cell{background:var(--t15-cell);--line:var(--t15-line);}
+  .t2 h2{background:var(--t2-head);}   .t2 .cell{background:var(--t2-cell);--line:var(--t2-line);}
+  .t3 h2{background:var(--t3-head);}   .t3 .cell{background:var(--t3-cell);--line:var(--t3-line);}
+  .t4 h2{background:var(--t4-head);}   .t4 .cell{background:var(--t4-cell);--line:var(--t4-line);}
+
+  footer.note{
+    margin-top:24px;font-size:12.5px;color:#777;line-height:1.55;
+    border-top:1px solid #e7e2d8;padding-top:14px;
+  }
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;display:none;}
+  @media(max-width:720px){.hint{display:block;}}
+
+  /* clickable cells */
+  .cell{cursor:pointer;transition:filter .12s,transform .12s;}
+  .cell:hover{filter:brightness(.97);}
+  .cell:active{transform:translateY(1px);}
+  .cell.no-data{opacity:.45;}
+  .cell.no-data:hover{opacity:.7;}
+  .cell .dot{
+    width:7px;height:7px;border-radius:50%;background:#1f7a4d;
+    margin-left:6px;flex:0 0 auto;
+  }
+  .cell.no-data .dot{display:none;}
+  .cell .count{
+    margin-left:6px;font-size:11px;color:#666;font-weight:600;
+    font-family:"Fraunces",serif;flex:0 0 auto;
+  }
+
+  /* detail view */
+  #detail{display:none;}
+  .back{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    background:#fff;border:1px solid #e0dacd;border-radius:8px;
+    padding:8px 14px;font-size:13.5px;color:#333;margin-bottom:16px;
+    font-family:inherit;
+  }
+  .back:hover{background:#f3efe6;}
+  .det-head h2{
+    font-family:"Fraunces",serif;font-weight:600;
+    font-size:clamp(20px,3.4vw,28px);line-height:1.15;
+  }
+  .det-head .meta{
+    margin-top:6px;font-size:13px;color:#5a5a5a;display:flex;
+    flex-wrap:wrap;gap:6px 16px;align-items:center;
+  }
+  .det-head .meta .red{color:var(--red);font-weight:700;}
+  .det-head .src{font-size:12.5px;}
+  .det-head .src a{color:#33597f;}
+  .jobs{margin-top:20px;display:flex;flex-direction:column;gap:12px;}
+  .jobcard{
+    background:#fff;border:1px solid #e7e2d8;border-radius:12px;
+    padding:16px 18px;
+  }
+  .jobcard h3{
+    font-family:"Fraunces",serif;font-weight:600;font-size:17px;
+    line-height:1.25;margin-bottom:8px;
+  }
+  .jobcard .row{
+    display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;
+    color:#444;margin-bottom:4px;
+  }
+  .jobcard .row b{color:#222;font-weight:600;}
+  .jobcard .spon{color:var(--red);font-weight:600;}
+  .jobcard .acts{
+    margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  .btn-apply{
+    background:#203a5c;color:#fff;text-decoration:none;font-size:13px;
+    padding:8px 16px;border-radius:8px;font-weight:600;
+  }
+  .btn-apply:hover{background:#16293f;}
+  .btn-applied{
+    cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;
+    padding:8px 16px;border-radius:8px;border:1px solid #cdb;
+    background:#fff;color:#1f7a4d;
+  }
+  .btn-applied.on{background:#1f7a4d;color:#fff;border-color:#1f7a4d;}
+  .btn-applied:disabled{opacity:.5;cursor:wait;}
+  .empty{
+    background:#fff;border:1px dashed #ddd6c8;border-radius:12px;
+    padding:28px 20px;text-align:center;color:#888;font-size:14px;
+  }
+  .loading{color:var(--muted);font-size:13px;margin:10px 0;}
+
+  /* tabs */
+  .tabs{display:flex;gap:8px;margin:4px 0 16px;}
+  .tab{
+    cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;
+    padding:8px 16px;border-radius:8px;border:1px solid #e0dacd;
+    background:#fff;color:#555;
+  }
+  .tab:hover{background:#f3efe6;}
+  .tab.active{background:#203a5c;color:#fff;border-color:#203a5c;}
+
+  .day-head{
+    font-family:"Fraunces",serif;font-weight:600;font-size:14px;
+    color:#6a6a6a;margin:16px 0 0;padding-bottom:5px;
+    border-bottom:1px solid #e7e2d8;
+  }
+  .day-head:first-child{margin-top:0;}
+  .day-head .cnt{font-weight:500;color:#aaa;font-size:12px;margin-left:6px;}
+
+  /* all-jobs view */
+  #alljobs{display:none;}
+  .all-head{
+    display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;
+    margin-bottom:14px;font-size:13px;color:#5a5a5a;
+  }
+  .all-head select{
+    font-family:inherit;font-size:13px;padding:6px 10px;border-radius:8px;
+    border:1px solid #e0dacd;background:#fff;color:#333;
+  }
+  .joblist{display:flex;flex-direction:column;gap:10px;}
+  .jobrow{
+    background:#fff;border:1px solid #e7e2d8;border-radius:12px;
+    padding:13px 16px;display:flex;flex-wrap:wrap;align-items:center;
+    gap:6px 14px;
+  }
+  .jobrow .co{
+    font-family:"Fraunces",serif;font-weight:600;font-size:14px;
+    cursor:pointer;color:#203a5c;flex:0 0 auto;
+  }
+  .jobrow .co:hover{text-decoration:underline;}
+  .jobrow .co.red{color:var(--red);}
+  .jobrow .jt{font-size:14px;font-weight:500;flex:1 1 220px;min-width:160px;}
+  .jobrow .mi{font-size:12px;color:#777;flex:0 0 auto;}
+  .jobrow .when{font-size:12px;color:#999;flex:0 0 auto;}
+  .jobrow .badge{
+    font-size:11px;font-weight:600;color:#1f7a4d;background:#eaf5ee;
+    border-radius:6px;padding:2px 8px;flex:0 0 auto;
+  }
+  .jobrow .acts{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+  /* resume-screening badges (BE / ML) */
+  .scr{display:inline-flex;gap:5px;flex:0 0 auto;}
+  .scr-row{margin:2px 0 8px;}
+  .scr-badge{
+    font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;
+    cursor:help;white-space:nowrap;
+  }
+  .scr-badge.pass{background:#e6f4ea;color:#1f7a4d;border:1px solid #bfe3cc;}
+  .scr-badge.warn{background:#fdf3da;color:#9a6b12;border:1px solid #efe0b3;}
+  .scr-badge.ko{background:#fbe6e6;color:#b21717;border:1px solid #eccaca;}
+  .jobrow .btn-apply,.jobrow .btn-applied{padding:6px 12px;font-size:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="title">
+    <h1>New Grad SWE</h1>
+  </header>
+
+  <div class="legend">
+    <span><span class="swatch-red">紅字</span> = sponsorship 不一定有</span>
+    <span><span class="mk up">▲</span> 我從原表調高的</span>
+    <span><span class="mk down">▼</span> 我從原表調低的</span>
+    <span><span class="mk new">＋</span> 新增的公司</span>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" id="tab-list">分級表</button>
+    <button class="tab" id="tab-all">全部職缺</button>
+  </div>
+
+  <p class="loading" id="loading">載入職缺資料中…</p>
+
+  <div id="listview">
+    <div class="scroll">
+      <div class="grid" id="grid"></div>
+    </div>
+    <p class="hint">← 左右滑動可看完整五個 tier →</p>
+  </div>
+
+  <div id="alljobs"></div>
+
+  <div id="detail"></div>
+
+  <footer class="note">
+    © 2026 kypkk
+  </footer>
+</div>
+
+<script>
+// {n: name, r: sponsorship-uncertain(red), m: 'up'|'down' moved from original, a: 1 = newly added}
+const data = {
+  "Tier 1":[
+    {n:"Amazon"},{n:"Anthropic",r:1},{n:"Apple"},{n:"Citadel Securities",a:1},
+    {n:"D.E. Shaw",a:1},{n:"Google"},{n:"Hudson River Trading",a:1},{n:"Jane Street",a:1},
+    {n:"Jump Trading",a:1},{n:"Meta"},{n:"Microsoft"},{n:"Netflix"},{n:"Nvidia"},
+    {n:"OpenAI",r:1},{n:"xAI",r:1,a:1}
+  ],
+  "Tier 1.5":[
+    {n:"Adobe"},{n:"Airbnb"},{n:"AMD"},{n:"American Express"},{n:"Anduril",r:1,a:1},
+    {n:"Anysphere (Cursor)",r:1,a:1},{n:"Bank of America"},{n:"Barclays"},{n:"BCG"},
+    {n:"BlackRock"},{n:"Bloomberg"},{n:"Capital One"},{n:"Citadel"},{n:"Citi bank"},
+    {n:"Databricks",r:1},{n:"DRW",a:1},{n:"Figma",r:1,m:"up"},{n:"Five Rings",a:1},
+    {n:"Goldman Sachs"},{n:"IMC Trading",a:1},{n:"Intel"},{n:"JP Morgan Chase"},
+    {n:"LinkedIn"},{n:"McKinsey & Company"},{n:"Millennium",a:1},{n:"Morgan Stanley"},
+    {n:"Optiver",a:1},{n:"Oracle"},{n:"Palantir",r:1,m:"up"},{n:"Perplexity AI",r:1,m:"up"},
+    {n:"Point72",a:1},{n:"Qualcomm"},{n:"Ramp",r:1,a:1},{n:"Scale AI",r:1,a:1},
+    {n:"Snowflake",m:"up"},{n:"SpaceX",r:1,a:1},{n:"Stripe",r:1,m:"up"},
+    {n:"Susquehanna (SIG)",a:1},{n:"Tesla"},{n:"TikTok / ByteDance"},
+    {n:"Tower Research Capital",a:1},{n:"Two Sigma"},{n:"Uber"},{n:"Vanguard"}
+  ],
+  "Tier 2":[
+    {n:"Akuna Capital",a:1},{n:"Amgen"},{n:"Arista Networks",a:1},{n:"Atlassian"},
+    {n:"Blue Origin",r:1,a:1},{n:"Chicago Trading Company",a:1},{n:"Cisco",a:1},
+    {n:"Cloudflare",r:1},{n:"Coinbase",m:"up"},{n:"Datadog",r:1},{n:"Dell Technologies"},
+    {n:"Deutsche Bank"},{n:"Discord",a:1},{n:"Disney"},{n:"DoorDash"},{n:"Dropbox"},
+    {n:"eBay"},{n:"Electronic Arts"},{n:"Epic Games",a:1},{n:"Expedia Group"},
+    {n:"Fannie Mae"},{n:"Fidelity"},{n:"Fortinet"},{n:"Freddie Mac"},{n:"GitHub",a:1},
+    {n:"Glean",r:1,a:1},{n:"HBO"},{n:"Hugging Face",r:1,a:1},{n:"Intuit",a:1},
+    {n:"Johnson & Johnson"},{n:"Lyft"},{n:"Mastercard"},{n:"Moderna"},{n:"Nike"},
+    {n:"Notion",r:1,a:1},{n:"PayPal"},{n:"Pinterest"},{n:"Riot Games",a:1},
+    {n:"Rippling",r:1,a:1},{n:"Roblox"},{n:"Salesforce"},{n:"Samsara",a:1},
+    {n:"Shopify",a:1},{n:"Snap"},{n:"Sony"},{n:"TD Bank"},{n:"UBS"},
+    {n:"Virtu Financial",a:1},{n:"Visa"},{n:"Walmart"},{n:"Waymo",r:1,m:"up"},
+    {n:"Wells Fargo bank"},{n:"X / Twitter"},{n:"Zoom"},
+    {n:"AppLovin"},{n:"CoreWeave"},{n:"ElevenLabs"},{n:"Twitch"}
+  ],
+  "Tier 3":[
+    {n:"AbbVie"},{n:"Accenture",m:"down"},{n:"Activision Blizzard",a:1},{n:"Aetna"},
+    {n:"Affirm"},{n:"Analog Devices"},{n:"Applied Materials"},{n:"AT&T"},
+    {n:"Aurora Innovation",r:1},{n:"Autodesk"},{n:"Best Buy"},{n:"Block"},
+    {n:"Boeing",r:1,a:1},{n:"Booking.com",a:1},{n:"BOSCH"},{n:"Boston Scientific"},
+    {n:"Brex",r:1},{n:"Broadcom",a:1},{n:"Carta",a:1},{n:"Caterpillar"},
+    {n:"Charles Schwab"},{n:"Chewy"},{n:"Chime",r:1},{n:"Confluent",m:"up"},
+    {n:"CVS Health",m:"down"},{n:"Deloitte",m:"down"},{n:"Discover"},{n:"DocuSign"},
+    {n:"Elastic",a:1},{n:"Epic Systems",a:1},{n:"Etsy",a:1},{n:"EY",m:"down"},
+    {n:"FedEx",m:"down"},{n:"Ford Motors"},{n:"General Motors"},{n:"Gilead"},
+    {n:"GitLab",a:1},{n:"HashiCorp",a:1},{n:"Home Depot"},{n:"HP"},{n:"IBM",m:"down"},
+    {n:"Illumina"},{n:"Indeed"},{n:"Instacart"},{n:"Intuitive"},{n:"IQVIA"},
+    {n:"Juniper Networks",a:1},{n:"KPMG",m:"down"},{n:"Liberty Mutual"},
+    {n:"Lockheed Martin",r:1,a:1},{n:"Lowe's"},{n:"Marriott"},{n:"Marvell",a:1},
+    {n:"MathWorks"},{n:"Medtronic"},{n:"MetLife"},{n:"Micron"},{n:"MongoDB",a:1},
+    {n:"Nationwide Insurance"},{n:"New York Life"},{n:"Northrop Grumman",r:1,a:1},
+    {n:"NXP Semiconductors",a:1},{n:"Okta / Saasure",m:"up"},{n:"Palo Alto Networks"},
+    {n:"Plaid",r:1},{n:"Progressive"},{n:"PWC",m:"down"},{n:"Red Hat",a:1},{n:"Reddit"},
+    {n:"Robinhood"},{n:"RTX (Raytheon)",r:1,a:1},{n:"Rubrik",a:1},{n:"Samsung"},
+    {n:"SAP"},{n:"ServiceNow",m:"up"},{n:"SoFi",a:1},{n:"Splunk",a:1},{n:"Spotify"},
+    {n:"Square"},{n:"Starbucks"},{n:"State Farm"},{n:"Takeda"},{n:"Target"},
+    {n:"Texas Instruments",a:1},{n:"Thermo Fisher Scientific"},{n:"T-Mobile"},
+    {n:"Toast",a:1},{n:"Twilio",m:"up"},{n:"Unity",a:1},{n:"Verizon"},{n:"VMware",a:1},
+    {n:"Wayfair"},{n:"Workday",m:"up"},{n:"Xfinity"},{n:"Yelp"},{n:"Zillow"},
+    {n:"Airtable"},{n:"Archer Aviation"},{n:"DraftKings"},{n:"Honeywell"},
+    {n:"PNC Financial Services"},{n:"Q2"},{n:"Symbotic"},{n:"Torc Robotics"},
+    {n:"Truveta"},{n:"Warner Bros. Discovery"},{n:"WeRide"},{n:"Whoop"},
+    {n:"Axon"},{n:"Boston Dynamics"},{n:"Dexcom"},{n:"Esri"},
+    {n:"Lila Sciences"},{n:"Philips"},{n:"Skydio"}
+  ],
+  "Tier 4":[
+    {n:"ADP"},{n:"American Family Insurance"},{n:"Asana",a:1},{n:"Audible"},
+    {n:"Bill.com",a:1},{n:"Booz Allen Hamilton",r:1,a:1},{n:"Box",a:1},
+    {n:"Bread Financial"},{n:"C3.ai",a:1},{n:"Cadence Design Systems"},{n:"Capgemini"},
+    {n:"Case Guard",r:1},{n:"CBRE"},{n:"Charter Communications"},
+    {n:"Citizens Financial Group"},{n:"Cleveland Clinic"},{n:"Cloudera",a:1},
+    {n:"Cohere",r:1},{n:"Credit Karma"},{n:"DTCC"},{n:"Dynatrace",a:1},
+    {n:"Elevance Health"},{n:"Epsilon"},{n:"Equifax"},{n:"Farmers Insurance"},
+    {n:"Flexport"},{n:"Genentech"},{n:"General Dynamics",r:1,a:1},
+    {n:"GlobalFoundries",a:1},{n:"GoDaddy"},{n:"Health Care Service"},
+    {n:"Hewlett Packard Enterprise"},{n:"HubSpot"},{n:"Humana"},{n:"KLA"},
+    {n:"L3Harris",r:1,a:1},{n:"Lam Research",a:1},{n:"LexisNexis"},{n:"Lucid Motors"},
+    {n:"M&T Bank"},{n:"Marqeta",a:1},{n:"Match Group",a:1},{n:"Mayo Clinic"},
+    {n:"McKesson"},{n:"Moody's"},{n:"Navy Federal Credit Union"},{n:"NetApp"},
+    {n:"New Relic",a:1},{n:"Nextdoor",a:1},{n:"Nuro",r:1},{n:"Nutanix",a:1},
+    {n:"Optum"},{n:"PagerDuty",a:1},{n:"Prudential"},{n:"Pure Storage"},
+    {n:"Regeneron Pharmaceuticals"},{n:"Rivian"},{n:"SiriusXM"},{n:"State Street"},
+    {n:"Synopsys"},{n:"Teladoc Health"},{n:"TransUnion"},{n:"Truist Bank"},
+    {n:"US bank"},{n:"Veeva Systems",a:1},{n:"Western Alliance Bank"},
+    {n:"Western Digital"},{n:"WSP"},{n:"Zoox"},
+    {n:"Albertsons"},{n:"AspenTech"},{n:"Auto-Owners Insurance"},{n:"Avnet"},
+    {n:"Berkshire Hathaway Energy"},{n:"Brain Corp"},{n:"Cummins"},
+    {n:"DAT Freight & Analytics"},{n:"IXL Learning"},{n:"Keysight Technologies"},
+    {n:"Logitech"},
+    {n:"Alteryx"},{n:"Coca-Cola"},{n:"Coherent Corp"},{n:"GE Appliances"},
+    {n:"H&R Block"},{n:"ICONIQ Capital"},{n:"KeyBank"},{n:"LetsGetChecked"},
+    {n:"Magna"},{n:"Milliman"},{n:"Nokia"},{n:"OpenSesame"},{n:"Proofpoint"},
+    {n:"PTC"},{n:"Relativity"},{n:"Relay"},{n:"Rocket Companies"},
+    {n:"Smith+Nephew"},{n:"Staples"},{n:"Trane Technologies"},{n:"Valon"},
+    {n:"Vertafore"},{n:"Viasat"},{n:"Wolters Kluwer"},{n:"Zebra Technologies"}
+  ]
+};
+
+const cls = {"Tier 1":"t1","Tier 1.5":"t15","Tier 2":"t2","Tier 3":"t3","Tier 4":"t4"};
+
+// shared with the fetcher: lowercase, non-alnum runs -> single "-", trim "-"
+function slugify(name){
+  return name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+
+const store = {};   // slug -> parsed JSON doc (or null if not fetched)
+const cellBySlug = {}; // slug -> {countEl, dotEl}
+const meta = {};    // slug -> {name (canonical tier-list name), red}
+const tierBySlug = {};   // slug -> "Tier 1" | … (for score-sort grouping)
+
+const grid = document.getElementById("grid");
+const listview = document.getElementById("listview");
+const alljobs = document.getElementById("alljobs");
+const detail = document.getElementById("detail");
+const loading = document.getElementById("loading");
+const tabList = document.getElementById("tab-list");
+const tabAll = document.getElementById("tab-all");
+let allSort = "fetched_at"; // or "posted_date"
+let screenings = {};   // job_id -> {profiles:{key:{badge,score,...}}} (resume-screen)
+const PROFILES = [["backend-infra","BE"],["ai-mlops","ML"]];
+
+for(const [tier, list] of Object.entries(data)){
+  const col = document.createElement("div");
+  col.className = "col " + cls[tier];
+  const h = document.createElement("h2");
+  h.textContent = tier;
+  col.appendChild(h);
+  list.forEach(c=>{
+    const slug = slugify(c.n);
+    const cell = document.createElement("div");
+    cell.className = "cell no-data";
+    cell.dataset.slug = slug;
+    cell.dataset.name = c.n;
+    cell.dataset.red = c.r ? "1" : "";
+
+    const nm = document.createElement("span");
+    nm.className = "nm" + (c.r ? " red":"");
+    nm.textContent = c.n;
+    cell.appendChild(nm);
+
+    if(c.m){
+      const mk = document.createElement("span");
+      mk.className = "mk " + c.m;
+      mk.textContent = c.m === "up" ? "▲" : "▼";
+      cell.appendChild(mk);
+    }
+    if(c.a){
+      const mk = document.createElement("span");
+      mk.className = "mk new";
+      mk.textContent = "＋";
+      mk.title = "新增的公司";
+      cell.appendChild(mk);
+    }
+    const count = document.createElement("span");
+    count.className = "count";
+    cell.appendChild(count);
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    cell.appendChild(dot);
+
+    cellBySlug[slug] = {countEl: count};
+    meta[slug] = {name: c.n, red: !!c.r};
+    tierBySlug[slug] = tier;
+    cell.addEventListener("click", ()=>showDetail(slug, c.n, "list"));
+    col.appendChild(cell);
+  });
+  grid.appendChild(col);
+}
+
+// ---- eager fetch of every company's JSON ----
+function fmtFetched(iso){
+  if(!iso) return "未知時間";
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  const date = d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+  const time = d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+  return `${date} · ${time}`;
+}
+
+// resume-screening results (decoupled store, keyed by job_id)
+async function loadScreenings(){
+  try{
+    const res = await fetch("screenings/screenings.json", {cache:"no-store"});
+    if(res.ok){ screenings = (await res.json()).screenings || {}; }
+  }catch(e){ screenings = {}; }
+}
+
+// up to two badges (BE / ML) for a job, or null if it hasn't been screened
+function screenBadges(jobId){
+  const s = screenings[jobId];
+  if(!s || !s.profiles) return null;
+  const wrap = document.createElement("span");
+  wrap.className = "scr";
+  let any = false;
+  for(const [key, label] of PROFILES){
+    const p = s.profiles[key];
+    if(!p) continue;
+    any = true;
+    const b = document.createElement("span");
+    const kind = p.badge === "pass" ? "pass" : p.badge === "borderline" ? "warn" : "ko";
+    b.className = "scr-badge " + kind;
+    const mark = p.badge === "pass" ? "✅" : p.badge === "borderline" ? "⚠️" : "❌";
+    b.textContent = `${label} ${mark}${p.score!=null ? " "+p.score : ""}`;
+    const ko = (p.knockouts||[]).join("; ");
+    b.title = `${label==="BE"?"Backend/Infra":"AI/MLOps"}：${p.badge}` +
+              (p.score!=null?` · ${p.score}/100`:"") + (ko?` · 卡關：${ko}`:"") +
+              ((p.missing||[]).length?` · 缺：${(p.missing||[]).join(", ")}`:"");
+    wrap.appendChild(b);
+  }
+  return any ? wrap : null;
+}
+
+async function loadAll(){
+  const slugs = Object.keys(cellBySlug);
+  await loadScreenings();
+  await Promise.all(slugs.map(async slug=>{
+    try{
+      const res = await fetch(`results/${slug}.json`, {cache:"no-store"});
+      if(!res.ok){ store[slug] = null; return; }
+      const doc = await res.json();
+      store[slug] = doc;
+      const cell = document.querySelector(`.cell[data-slug="${slug}"]`);
+      if(cell){
+        cell.classList.remove("no-data");
+        const n = (doc.jobs||[]).length;
+        cellBySlug[slug].countEl.textContent = n ? n : "0";
+      }
+    }catch(e){ store[slug] = null; }
+  }));
+  loading.style.display = "none";
+}
+
+// ---- detail view ----
+function showDetail(slug, name, origin){
+  origin = origin || "list";
+  const doc = store[slug];
+  detail.innerHTML = "";
+
+  const back = document.createElement("button");
+  back.className = "back";
+  back.textContent = origin === "all" ? "← 返回全部職缺" : "← 返回分級表";
+  back.addEventListener("click", ()=> origin === "all" ? showAll() : showList());
+  detail.appendChild(back);
+
+  const head = document.createElement("div");
+  head.className = "det-head";
+  const h2 = document.createElement("h2");
+  h2.textContent = name;
+  head.appendChild(h2);
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  if(doc){
+    const jobs = doc.jobs || [];
+    const span = document.createElement("span");
+    span.innerHTML = `<b>${jobs.length}</b> 個職缺 · 抓取於 <b>${fmtFetched(doc.fetched_at)}</b>`;
+    meta.appendChild(span);
+    if(doc.source){
+      const src = document.createElement("span");
+      src.className = "src";
+      src.innerHTML = `來源：<a href="${doc.source}" target="_blank" rel="noopener">${doc.source}</a>`;
+      meta.appendChild(src);
+    }
+  }else{
+    const span = document.createElement("span");
+    span.textContent = "尚未抓取此公司的職缺。";
+    meta.appendChild(span);
+  }
+  head.appendChild(meta);
+  detail.appendChild(head);
+
+  const jobs = doc ? (doc.jobs || []) : [];
+  if(!doc || jobs.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = doc ? `目前 ${name} 沒有抓到符合的職缺。`
+                            : `尚未抓取 ${name} 的職缺資料。`;
+    detail.appendChild(empty);
+  }else{
+    const wrap = document.createElement("div");
+    wrap.className = "jobs";
+    // 依 posted_date 倒序：最新在最上，無日期沉底；再依每一天加小標題
+    const ts = v => { const t = Date.parse(v); return isNaN(t) ? -Infinity : t; };
+    const sorted = jobs.slice().sort((a,b)=> ts(b.posted_date) - ts(a.posted_date));
+    const counts = {};
+    sorted.forEach(j=>{ const d = j.posted_date || "未知發布日";
+      counts[d] = (counts[d]||0) + 1; });
+    let lastDay = null;
+    sorted.forEach(job=>{
+      const d = job.posted_date || "未知發布日";
+      if(d !== lastDay){
+        lastDay = d;
+        const dh = document.createElement("div");
+        dh.className = "day-head";
+        dh.innerHTML = `${fmtDay(d)}<span class="cnt">${counts[d]} 個職缺</span>`;
+        wrap.appendChild(dh);
+      }
+      wrap.appendChild(renderJob(slug, job));
+    });
+    detail.appendChild(wrap);
+  }
+
+  setView("detail");
+  window.scrollTo(0,0);
+}
+
+function field(label, value){
+  if(value === null || value === undefined || value === "" ||
+     (Array.isArray(value) && value.length === 0)) return null;
+  const row = document.createElement("div");
+  row.className = "row";
+  const v = Array.isArray(value) ? value.join(" · ") : value;
+  row.innerHTML = `<span><b>${label}</b> ${v}</span>`;
+  return row;
+}
+
+function renderJob(slug, job){
+  const card = document.createElement("div");
+  card.className = "jobcard";
+
+  const h3 = document.createElement("h3");
+  h3.textContent = job.title || "(未命名職缺)";
+  card.appendChild(h3);
+
+  const sb = screenBadges(job.job_id);
+  if(sb){ sb.classList.add("scr-row"); card.appendChild(sb); }
+
+  [
+    field("地點", job.locations),
+    field("類型", job.employment_type),
+    field("發布日", job.posted_date),
+    field("薪資", job.salary_range),
+    field("資格", job.qualifications),
+    field("職缺來源", job.job_board),
+  ].forEach(r=> r && card.appendChild(r));
+
+  if(job.sponsorship_note){
+    const s = document.createElement("div");
+    s.className = "row";
+    s.innerHTML = `<span class="spon">簽證：${job.sponsorship_note}</span>`;
+    card.appendChild(s);
+  }
+  const fa = field("抓取時間", fmtFetched(job.fetched_at));
+  if(fa) card.appendChild(fa);
+
+  const acts = document.createElement("div");
+  acts.className = "acts";
+  if(job.apply_url){
+    const a = document.createElement("a");
+    a.className = "btn-apply";
+    a.href = job.apply_url; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "前往申請 ↗";
+    acts.appendChild(a);
+  }
+  acts.appendChild(makeAppliedToggle(slug, job));
+  card.appendChild(acts);
+
+  return card;
+}
+
+// reusable applied toggle (used by both detail cards and the all-jobs list);
+// persists to results/<slug>.json via the server and updates the in-memory job.
+function makeAppliedToggle(slug, job, onChange){
+  const toggle = document.createElement("button");
+  const setLabel = on=>{
+    toggle.textContent = on ? "已申請 ✓" : "標記為已申請";
+    toggle.classList.toggle("on", !!on);
+  };
+  setLabel(job.applied);
+  toggle.className = "btn-applied" + (job.applied ? " on" : "");
+  toggle.addEventListener("click", async ()=>{
+    const next = !job.applied;
+    toggle.disabled = true;
+    try{
+      const res = await fetch("/api/applied", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({slug, job_id: job.job_id, applied: next})
+      });
+      if(!res.ok) throw new Error("save failed");
+      job.applied = next;           // update in-memory cache (shared object)
+      setLabel(next);
+      if(onChange) onChange(next);
+    }catch(e){
+      alert("無法儲存（請確認是用 python3 server.py 啟動，而非直接開檔）。");
+    }finally{
+      toggle.disabled = false;
+    }
+  });
+  return toggle;
+}
+
+// ---- view controller ----
+function setView(name){
+  // name: "list" | "all" | "detail"
+  listview.style.display = name === "list" ? "block" : "none";
+  alljobs.style.display  = name === "all"  ? "block" : "none";
+  detail.style.display   = name === "detail" ? "block" : "none";
+  document.getElementById("tabs").style.display = name === "detail" ? "none" : "flex";
+  tabList.classList.toggle("active", name === "list");
+  tabAll.classList.toggle("active", name === "all");
+}
+function showList(){ setView("list"); }
+function showAll(){ renderAllJobs(); setView("all"); }
+
+// ---- all-jobs view (every fetched job, most recent first) ----
+function renderAllJobs(){
+  alljobs.innerHTML = "";
+
+  // flatten every job across companies, tagged with its company slug/name.
+  // fetched: fall back to the file-level fetched_at when the job lacks its own,
+  // so a fetcher that only stamps the file still sorts correctly.
+  const rows = [];
+  let companies = 0;
+  for(const slug of Object.keys(store)){
+    const doc = store[slug];
+    if(!doc || !(doc.jobs||[]).length) continue;
+    companies++;
+    doc.jobs.forEach(job=> rows.push({
+      slug, job,
+      fetched: job.fetched_at || doc.fetched_at || null
+    }));
+  }
+
+  // most recent on top: rows with a missing/unparseable date sort to the bottom.
+  const ts = v => { const t = Date.parse(v); return isNaN(t) ? -Infinity : t; };
+  // best resume-screening score for a job (knockout counts as low; unscreened sinks)
+  const scoreOf = r => {
+    const s = screenings[r.job.job_id];
+    if(!s || !s.profiles) return -Infinity;
+    let best = -Infinity;
+    for(const p of Object.values(s.profiles)){
+      const v = p.badge === "knockout" ? -1 : (p.score != null ? p.score : -1);
+      if(v > best) best = v;
+    }
+    return best;
+  };
+  if(allSort === "score"){
+    rows.sort((a,b)=> scoreOf(b) - scoreOf(a));
+  }else{
+    const key = r => allSort === "posted_date" ? r.job.posted_date : r.fetched;
+    rows.sort((a,b)=> ts(key(b)) - ts(key(a)));
+  }
+
+  const head = document.createElement("div");
+  head.className = "all-head";
+  const summary = document.createElement("span");
+  summary.innerHTML = `共 <b>${rows.length}</b> 個職缺，來自 <b>${companies}</b> 間公司`;
+  head.appendChild(summary);
+  const sortWrap = document.createElement("span");
+  sortWrap.innerHTML = `排序：`;
+  const sel = document.createElement("select");
+  sel.innerHTML = `<option value="fetched_at">最近抓取</option>`
+                + `<option value="posted_date">最近發布</option>`
+                + `<option value="score">篩選分數最高</option>`;
+  sel.value = allSort;
+  sel.addEventListener("change", ()=>{ allSort = sel.value; renderAllJobs(); });
+  sortWrap.appendChild(sel);
+  head.appendChild(sortWrap);
+  alljobs.appendChild(head);
+
+  if(rows.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "目前還沒有抓到任何職缺。先讓 fetcher 跑過幾間公司吧。";
+    alljobs.appendChild(empty);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "joblist";
+
+  const groupHead = (label, n) => {
+    const h = document.createElement("div");
+    h.className = "day-head";
+    h.innerHTML = `${label}<span class="cnt">${n} 個職缺</span>`;
+    list.appendChild(h);
+  };
+
+  if(allSort === "score"){
+    // 依分數排序、再以 tier 分組（tier 內仍照分數高→低，rows 已是分數排序）
+    const TIER_ORDER = ["Tier 1","Tier 1.5","Tier 2","Tier 3","Tier 4"];
+    const groups = {};
+    rows.forEach(r=>{ const t = tierBySlug[r.slug] || "未分級";
+      (groups[t] = groups[t] || []).push(r); });
+    const order = TIER_ORDER.filter(t=>groups[t])
+      .concat(Object.keys(groups).filter(t=>!TIER_ORDER.includes(t)));
+    order.forEach(t=>{
+      groupHead(t, groups[t].length);
+      groups[t].forEach(({slug, job, fetched})=>
+        list.appendChild(renderJobRow(slug, job, fetched)));
+    });
+  }else if(allSort === "posted_date"){
+    // 「最近發布」排序時，依每一天加小標題分組
+    const dayCounts = {};
+    rows.forEach(r=>{ const d = r.job.posted_date || "未知發布日";
+      dayCounts[d] = (dayCounts[d]||0) + 1; });
+    let lastDay = null;
+    rows.forEach(({slug, job, fetched})=>{
+      const d = job.posted_date || "未知發布日";
+      if(d !== lastDay){ lastDay = d; groupHead(fmtDay(d), dayCounts[d]); }
+      list.appendChild(renderJobRow(slug, job, fetched));
+    });
+  }else{
+    rows.forEach(({slug, job, fetched})=>
+      list.appendChild(renderJobRow(slug, job, fetched)));
+  }
+  alljobs.appendChild(list);
+}
+
+function fmtDay(d){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : d;
+}
+
+function renderJobRow(slug, job, fetched){
+  const m = meta[slug] || {name: (store[slug] && store[slug].company) || slug, red:false};
+  const row = document.createElement("div");
+  row.className = "jobrow";
+
+  const co = document.createElement("span");
+  co.className = "co" + (m.red ? " red" : "");
+  co.textContent = m.name;
+  co.title = "查看 " + m.name + " 的所有職缺";
+  co.addEventListener("click", ()=> showDetail(slug, m.name, "all"));
+  row.appendChild(co);
+
+  const jt = document.createElement("span");
+  jt.className = "jt";
+  jt.textContent = job.title || "(未命名職缺)";
+  row.appendChild(jt);
+
+  const loc = (job.locations||[]).join(" · ");
+  if(loc){
+    const mi = document.createElement("span");
+    mi.className = "mi";
+    mi.textContent = loc;
+    row.appendChild(mi);
+  }
+  if(job.job_board){
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = job.job_board;
+    row.appendChild(b);
+  }
+  const sb = screenBadges(job.job_id);
+  if(sb) row.appendChild(sb);
+  const when = document.createElement("span");
+  when.className = "when";
+  if(allSort === "posted_date" || allSort === "score"){
+    when.textContent = job.posted_date ? ("發布 " + job.posted_date) : "發布日未知";
+  }else{
+    when.textContent = fetched ? ("抓取 " + fmtFetched(fetched)) : "抓取時間未知";
+  }
+  row.appendChild(when);
+
+  const acts = document.createElement("div");
+  acts.className = "acts";
+  if(job.apply_url){
+    const a = document.createElement("a");
+    a.className = "btn-apply";
+    a.href = job.apply_url; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "申請 ↗";
+    acts.appendChild(a);
+  }
+  acts.appendChild(makeAppliedToggle(slug, job));
+  row.appendChild(acts);
+  return row;
+}
+
+tabList.addEventListener("click", showList);
+tabAll.addEventListener("click", showAll);
+
+loadAll();
+</script>
+</body>
+</html>
