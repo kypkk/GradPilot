@@ -136,12 +136,12 @@ no-network run can't wipe the existing board. Early-season (June) results are th
 that's expected.
 
 **`fetch_jobs.py` does:**
-- **A layer:** downloads three community new-grad lists and matches by company name —
-  Simplify `listings.json` (has `sponsorship`), **jobright-ai/2026-Software-Engineer-
-  New-Grad** (README table; jobright.ai redirect links), and **speedyapply/2026-SWE-
-  College-Jobs** `NEW_GRAD_USA.md` (real ATS links + salary). Cross-source dedup is by
-  normalized URL + posting-id tokens in the URL + (title+location) across different
-  boards. The markdown lists leak SWE II/senior rows → `clean_level_excluded` guard.
+- **A layer:** downloads two community new-grad lists and matches by company name —
+  Simplify `listings.json` (has `sponsorship`) and **speedyapply/2026-SWE-College-Jobs**
+  `NEW_GRAD_USA.md` (real ATS links + salary). speedyapply postings that route through
+  Workday (`myworkdayjobs.com`) are skipped. Cross-source dedup is by normalized URL +
+  posting-id tokens in the URL + (title+location) across different boards. The markdown
+  list leaks SWE II/senior rows → `clean_level_excluded` guard.
 - **B layer:** calls each mapped company's ATS API (Greenhouse/Lever/Ashby/
   SmartRecruiters).
 - Filters to **SWE + new-grad + US + degree(Bachelor's/Master's) + posted ≥

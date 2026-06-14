@@ -320,16 +320,9 @@ def from_simplify(slug, name, idx, fetched, high=False):
 
 
 # ---------- GitHub markdown lists (A layer, like Simplify) ----------
-JOBRIGHT_URL = ("https://raw.githubusercontent.com/jobright-ai/"
-                "2026-Software-Engineer-New-Grad/master/README.md")
-JOBRIGHT_REPO = "https://github.com/jobright-ai/2026-Software-Engineer-New-Grad"
 SPEEDY_URL = ("https://raw.githubusercontent.com/speedyapply/"
               "2026-SWE-College-Jobs/main/NEW_GRAD_USA.md")
 SPEEDY_REPO = "https://github.com/speedyapply/2026-SWE-College-Jobs"
-
-MONTHS = {m: i + 1 for i, m in enumerate(
-    ["jan", "feb", "mar", "apr", "may", "jun",
-     "jul", "aug", "sep", "oct", "nov", "dec"])}
 
 
 def get_text(url):
@@ -352,20 +345,6 @@ def clean_level_excluded(title):
     return level_excluded(f" {t} ")
 
 
-def md_day_to_date(s, today):
-    """'Jun 11' -> YYYY-MM-DD (assume current year; a future date = last year)."""
-    m = re.match(r"([A-Za-z]{3})\w*\s+(\d{1,2})", s.strip())
-    if not m or m.group(1).lower() not in MONTHS:
-        return None
-    try:
-        d = today.replace(month=MONTHS[m.group(1).lower()], day=int(m.group(2)))
-    except ValueError:
-        return None
-    if (d - today).days > 7:
-        d = d.replace(year=d.year - 1)
-    return d.strftime("%Y-%m-%d")
-
-
 def age_to_date(s, today):
     """'6d' / '2w' / '3mo' / '5h' -> YYYY-MM-DD."""
     m = re.match(r"(\d+)\s*(mo|[hdw])", s.strip().lower())
@@ -380,47 +359,12 @@ def age_to_date(s, today):
 def board_from_url(url):
     u = (url or "").lower()
     for pat, name in [("greenhouse.io", "Greenhouse"), ("lever.co", "Lever"),
-                      ("ashbyhq.com", "Ashby"), ("myworkdayjobs.com", "Workday"),
+                      ("ashbyhq.com", "Ashby"),
                       ("smartrecruiters.com", "SmartRecruiters"),
-                      ("icims.com", "iCIMS"), ("jobright.ai", "Jobright")]:
+                      ("icims.com", "iCIMS")]:
         if pat in u:
             return name
     return "Company careers"
-
-
-def load_jobright():
-    """jobright-ai/2026-Software-Engineer-New-Grad README table -> index."""
-    md = get_text(JOBRIGHT_URL)
-    if md is None:
-        return {}, False
-    today = datetime.now()
-    idx = {}
-    company = None
-    for line in md.splitlines():
-        if not line.startswith("|"):
-            continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
-        if len(cells) < 5 or cells[0].startswith("---") or cells[0] == "Company":
-            continue
-        cm = re.match(r"\*\*\[([^\]]+)\]", cells[0])
-        if cm:
-            company = cm.group(1).strip()
-        elif "↳" not in cells[0]:
-            continue                      # neither a company cell nor a ↳ row
-        if not company:
-            continue
-        tm = re.match(r"\*\*\[([^\]]+)\]\(([^)]+)\)", cells[1])
-        if not tm:
-            continue
-        title, url = tm.group(1).strip(), tm.group(2).split("?")[0]
-        jid = (re.search(r"/jobs/info/(\w+)", url) or [None, None])[1]
-        idx.setdefault(norm(company), []).append({
-            "id": jid or url.rsplit("/", 1)[-1],
-            "company": company, "title": title, "url": url,
-            "locations": [cells[2]] if cells[2] else [],
-            "posted_date": md_day_to_date(cells[4], today),
-            "salary": None, "board": "Jobright"})
-    return idx, True
 
 
 def load_speedyapply():
@@ -446,6 +390,8 @@ def load_speedyapply():
         if not (cm and am):
             continue
         company, url = cm.group(1).strip(), am.group(1)
+        if "myworkdayjobs.com" in url.lower():
+            continue                       # skip Workday-routed postings
         hid = hashlib.md5(url.encode()).hexdigest()[:10]
         idx.setdefault(norm(company), []).append({
             "id": hid, "company": company,
@@ -459,7 +405,7 @@ def load_speedyapply():
 
 
 def from_listmd(slug, name, idx, fetched, high, prefix):
-    """Filter+wrap raw entries from a markdown-list index (jobright/speedyapply).
+    """Filter+wrap raw entries from a markdown-list index (speedyapply).
     Curated new-grad lists, but they leak SWE II/senior rows -> level guard."""
     keys = {norm(name)}
     for part in re.split(r"[/&]", name):
@@ -570,12 +516,8 @@ def main():
               "Aborting — no files written, existing results/ preserved.",
               file=sys.stderr)
         sys.exit(2)
-    print("downloading jobright / speedyapply lists…", file=sys.stderr)
-    jobright, jr_ok = load_jobright()
+    print("downloading speedyapply list…", file=sys.stderr)
     speedy, sa_ok = load_speedyapply()
-    if not jr_ok:
-        print("  warn: jobright list unreachable — continuing without it",
-              file=sys.stderr)
     if not sa_ok:
         print("  warn: speedyapply list unreachable — continuing without it",
               file=sys.stderr)
@@ -607,15 +549,14 @@ def main():
 
         # A-layer (every company): each loader already applies all filters.
         # Priority: ATS (canonical) > Simplify (sponsorship info) >
-        # speedyapply (real ATS url + salary) > jobright (redirect urls).
+        # speedyapply (real ATS url + salary).
         smpl = from_simplify(slug, name, simplify, fetched, high)
         sa = from_listmd(slug, name, speedy, fetched, high, "sa")
-        jr = from_listmd(slug, name, jobright, fetched, high, "jr")
 
         # cross-source dedup: URL/posting-id keys always; title+location key only
         # across different boards (same-board same-title roles are distinct posts)
         merged, seen, tboard = [], set(), {}
-        for j in jobs + smpl + sa + jr:
+        for j in jobs + smpl + sa:
             ks = dup_keys(j)
             tk = title_key(j)
             if ks & seen:
